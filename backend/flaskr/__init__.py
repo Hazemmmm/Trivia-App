@@ -101,65 +101,113 @@ def create_app(test_config=None):
 # ADD New Question
     @app.route('/questions',methods=['POST'])
     def add_question():
-        try:
-          body = request.get_json()
-          new_question = body.get('question')
-          new_answer = body.get('answer')
-          new_difficulty = body.get('difficulty')
-          new_category = body.get('category')
+      
+        body = request.get_json()
+        new_question = body.get('question')
+        new_answer = body.get('answer')
+        new_difficulty = body.get('difficulty')
+        new_category = body.get('category')
+        if ((new_question is None) or (new_answer is None) or (new_difficulty is None) or (new_category is None)):
+          abort(422)
           
-          question = Question(question=new_question, answer=new_answer, difficulty=new_difficulty, category=new_category)
-          question.insert()
-          
-          return jsonify({
-                'sucecss':True,
-                'created' :question.id
-            })
+        question = Question(question=new_question, answer=new_answer, difficulty=new_difficulty, category=new_category)
+        question.insert()
+        
+        return jsonify({
+              'sucecss':True,
+              'created' :question.id
+          })
             
-        except:
-            abort(422)
+        
                    
 # Search for Exisiting Questions.
     @app.route('/questions/search',methods=['POST'])
     def search_question():
           
-          try:  
-            body = request.get_json()
-            search_term = body.get('searchTerm',None)
-            if search_term:
-                  search_result = Question.query.filter(Question.question.ilike(f'%{search_term}%')).all()
+          
+        body = request.get_json()
+        search_term = body.get('searchTerm',None)
+        search_result = Question.query.filter(Question.question.ilike(f'%{search_term}%')).all()
+        if (len(search_result) == 0):
+            abort(404)
+                
+        return jsonify({
+            'sucecss':True,
+            'questions': [question.format() for question in search_result],
+            'total_questions': len(search_result),
+            'current_categroy': None
+          })
                   
-                  return jsonify({
-                    'sucecss':True,
-                    'questions': [question.format() for question in search_result],
-                    'total_questions': len(search_result),
-                    'current_categroy': None
-                  })
-                  
-          except:
-            abort(422)        
+               
 
 #GET Questions based on Category Id
     @app.route('/categories/<int:id>/questions', methods=['GET'])
     def get_questions_by_category(id):
-        
-        try:
           
-          questions = Question.query.filter(Question.category == id).all()
+        category = Category.query.filter_by(id=id).one_or_none()
+
+        if (category is None):
+            abort(400)
+            
+        selection = Question.query.filter_by(category=category.id).all()
           
-          return jsonify({
-            'success':True,
-            'questions':[question.format() for question in questions],
-            'total_questions': len(questions),
-            'current_categroy':None
+        paginated = paginate_questions(request, selection)
+
+        return jsonify({
+          'success':True,
+          'questions':paginated,
+          'total_questions': len(Question.query.all()),
+          'current_categroy': None
           })
           
-        except:
-          abort(404)
+     
 
 
 
- 
+    @app.route('/quizzes', methods=['POST'])
+    def get_random_quiz_question():
+      
+        body = request.get_json()
+
+        previous = body.get('previous_questions')
+        category = body.get('quiz_category')
+
+        if ((category is None) or (previous is None)):
+            abort(400)
+
+        if (category['id'] == 0):
+            questions = Question.query.all()
+        else:
+            questions = Question.query.filter_by(category=category['id']).all()
+
+        total = len(questions)
+
+        def get_random_question():
+            return questions[random.randrange(0, len(questions), 1)]
+
+        def check_if_used(question):
+            used = False
+            for q in previous:
+                if (q == question.id):
+                    used = True
+
+            return used
+
+        question = get_random_question()
+
+        while (check_if_used(question)):
+            question = get_random_question()
+
+            if (len(previous) == total):
+                return jsonify({
+                    'success': True
+                })
+                
+        return jsonify({
+            'success': True,
+            'question': question.format()
+        })
+
     
     @app.errorhandler(404)
     def not_found(error):
