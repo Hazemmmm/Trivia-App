@@ -102,6 +102,7 @@ def create_app(test_config=None):
     @app.route('/questions',methods=['POST'])
     def add_question():
       
+        print(request)
         body = request.get_json()
         new_question = body.get('question')
         new_answer = body.get('answer')
@@ -124,7 +125,8 @@ def create_app(test_config=None):
     @app.route('/questions/search',methods=['POST'])
     def search_question():
           
-          
+       
+        
         body = request.get_json()
         search_term = body.get('searchTerm',None)
         search_result = Question.query.filter(Question.question.ilike(f'%{search_term}%')).all()
@@ -160,54 +162,32 @@ def create_app(test_config=None):
           'current_categroy': None
           })
           
-     
-
-
-
-    @app.route('/quizzes', methods=['POST'])
-    def get_random_quiz_question():
-      
+    @app.route('/play', methods=['POST'])
+    def play_quiz():
+        questions = None  
         body = request.get_json()
-
-        previous = body.get('previous_questions')
-        category = body.get('quiz_category')
-
-        if ((category is None) or (previous is None)):
-            abort(400)
-
-        if (category['id'] == 0):
-            questions = Question.query.all()
+        previous_questions = body.get('previous_questions')
+        quiz_categroy = body.get('quiz_category')['id']
+        
+        if quiz_categroy is 0:
+          questions = Question.query.all()
+         
+          
         else:
-            questions = Question.query.filter_by(category=category['id']).all()
-
-        total = len(questions)
-
-        def get_random_question():
-            return questions[random.randrange(0, len(questions), 1)]
-
-        def check_if_used(question):
-            used = False
-            for q in previous:
-                if (q == question.id):
-                    used = True
-
-            return used
-
-        question = get_random_question()
-
-        while (check_if_used(question)):
-            question = get_random_question()
-
-            if (len(previous) == total):
-                return jsonify({
-                    'success': True
-                })
-                
+          questions = Question.query.filter_by(category=str(quiz_categroy))
+        
+        for q in questions:
+          if q.id not in previous_questions:
+            # current_question = previous_questions[random.randint(0,len(questions))]
+            current_question = q.format()
+            break
+          
         return jsonify({
-            'success': True,
-            'question': question.format()
-        })
-
+          'sucecss':True,
+          'question': current_question
+        })  
+        
+        
     
     @app.errorhandler(404)
     def not_found(error):
