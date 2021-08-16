@@ -158,11 +158,11 @@ class TriviaTestCase(unittest.TestCase):
     
     def test_play_quiz_game(self):
         
-        res = self.client().post('/quizzes',json={'previous_questions': [20, 21],'quiz_category': {'type': 'Science', 'id': '1'}})
+        res = self.client().post('/play',json={'previous_questions': [20, 21],'quiz_category': {'type': 'Science', 'id': '1'}})
         data = json.loads(res.data)
         print(data)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
+        self.assertEqual(data['sucecss'], True)
        
    
 
