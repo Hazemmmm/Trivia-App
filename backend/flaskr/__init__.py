@@ -14,10 +14,8 @@ def paginate_questions(request,selection):
     page = request.args.get('page',1,type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
-    
     questions = [question.format() for question in selection]
     current_questions = questions[start:end]
- 
     return current_questions
 
 def create_app(test_config=None):
@@ -35,7 +33,6 @@ def create_app(test_config=None):
       
     @app.route('/categories', methods=['GET'])
     def get_categories():
-          
         try:
           categories = Category.query.order_by(Category.type).all()
         
@@ -45,7 +42,6 @@ def create_app(test_config=None):
             cat.id:cat.type for cat in categories
             }
           })
-          
         except:
           abort(500)
 
@@ -56,7 +52,7 @@ def create_app(test_config=None):
         try:
           questions = Question.query.all()
           current_questions = paginate_questions(request,questions)
-          
+        
           categories = Category.query.all()
        
           if (len(current_questions) == 0):
@@ -113,8 +109,7 @@ def create_app(test_config=None):
               'created' :question.id
           })
             
-        
-                   
+                
 # Search for Exisiting Questions.
     @app.route('/search',methods=['POST'])
     def search_question():
@@ -139,24 +134,20 @@ def create_app(test_config=None):
             'current_categroy': category[0].format()['type']
           })
                   
-               
-
 #GET Questions based on Category Id
     @app.route('/categories/<int:id>/questions', methods=['GET'])
     def get_questions_by_category(id):
           
         category = Category.query.filter_by(id=id).one_or_none()
         print(category.format())  
-        if (category is None):
-            abort(400)
-            
+        
+  
         selection = Question.query.filter_by(category=category.id).all()
-          
-        paginated = paginate_questions(request, selection)
+        question_paginate = paginate_questions(request, selection)
 
         return jsonify({
           'success':True,
-          'questions':paginated,
+          'questions':question_paginate,
           'total_questions': len(Question.query.all()),
           'current_categroy': category.format()['type']
           })
@@ -186,8 +177,7 @@ def create_app(test_config=None):
           'question': current_question
         })  
         
-        
-    
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
