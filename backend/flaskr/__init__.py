@@ -21,20 +21,15 @@ def paginate_questions(request,selection):
     return current_questions
 
 def create_app(test_config=None):
-  # create and configure the app
     app = Flask(__name__)
     setup_db(app)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app)
 
-  
-  
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Headers','content-type,authorization,true')
         response.headers.add('Access-Control-Allow-Methods','GET,PUT,POST,DELETE,OPTIONS')
-        
         return response
-
 
 #  GET Categroies & Questions
       
@@ -43,12 +38,11 @@ def create_app(test_config=None):
           
         try:
           categories = Category.query.order_by(Category.type).all()
-      
         
           return jsonify({
             "sucecss":True,
             "categories": {
-              category.id:category.type for category in categories
+            cat.id:cat.type for cat in categories
             }
           })
           
@@ -74,7 +68,7 @@ def create_app(test_config=None):
             "total_questions": len(questions),
             "current_category":None,
             "categories": {
-              category.id:category.type for category in categories
+              cat.id:cat.type for cat in categories
             }
           })
           
@@ -122,22 +116,27 @@ def create_app(test_config=None):
         
                    
 # Search for Exisiting Questions.
-    @app.route('/questions/search',methods=['POST'])
+    @app.route('/search',methods=['POST'])
     def search_question():
-          
-       
-        
         body = request.get_json()
-        search_term = body.get('searchTerm',None)
-        search_result = Question.query.filter(Question.question.ilike(f'%{search_term}%')).all()
-        if (len(search_result) == 0):
+        # print(body)
+        searchTerm = body.get('searchTerm')
+        questions = Question.query.filter(Question.question.ilike(f'%{searchTerm}%')).all()
+        current_quesitons = paginate_questions(request,questions)
+        
+        total_questions = len(Question.query.all())
+        
+        category = Category.query.order_by(Category.id).all()
+      
+
+        if (len(questions) == 0):
             abort(404)
                 
         return jsonify({
             'sucecss':True,
-            'questions': [question.format() for question in search_result],
-            'total_questions': len(search_result),
-            'current_categroy': None
+            'questions': current_quesitons,
+            'total_questions': total_questions,
+            'current_categroy': category[0].format()['type']
           })
                   
                
@@ -147,7 +146,7 @@ def create_app(test_config=None):
     def get_questions_by_category(id):
           
         category = Category.query.filter_by(id=id).one_or_none()
-
+        print(category.format())  
         if (category is None):
             abort(400)
             
@@ -159,7 +158,7 @@ def create_app(test_config=None):
           'success':True,
           'questions':paginated,
           'total_questions': len(Question.query.all()),
-          'current_categroy': None
+          'current_categroy': category.format()['type']
           })
           
     @app.route('/play', methods=['POST'])
@@ -169,7 +168,7 @@ def create_app(test_config=None):
         previous_questions = body.get('previous_questions')
         quiz_categroy = body.get('quiz_category')['id']
         
-        if quiz_categroy is 0:
+        if quiz_categroy == 0:
           questions = Question.query.all()
          
           
