@@ -10,7 +10,6 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 def paginate_questions(request,selection):
-    
     page = request.args.get('page',1,type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
@@ -29,111 +28,102 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Methods','GET,PUT,POST,DELETE,OPTIONS')
         return response
 
-#  GET Categroies & Questions
-      
     @app.route('/categories', methods=['GET'])
     def get_categories():
         try:
           categories = Category.query.order_by(Category.type).all()
           if not categories:
-                abort(422)
+              abort(422)
                 
           return jsonify({
             "sucecss":True,
-            "categories": {
-            cat.id:cat.type for cat in categories
-            }
+            "categories": {cat.id:cat.type for cat in categories}
           })
-        except:
+        except Exception as e:
+          print(e)
           abort(404)
-
-
+          
     @app.route('/questions', methods=['GET'])
     def get_questions():
-      
         try:
           questions = Question.query.all()
           current_questions = paginate_questions(request,questions)
-        
           categories = Category.query.all()
-       
           if (len(current_questions) == 0):
-            abort(404)
-            
+            abort(404)  
           return jsonify({
             "sucecss":True,
             "questions":current_questions,
             "total_questions": len(questions),
             "current_category":None,
-            "categories": {
-              cat.id:cat.type for cat in categories
-            }
+            "categories": {cat.id:cat.type for cat in categories}
           })
-          
-        except:
+        except Exception as e:
+          print(e)
           abort(404)
-
- # DELETE Question by id
+          
     @app.route('/questions/<int:id>',methods=['DELETE'])
     def delete_question(id):
         question =  Question.query.filter( Question.id ==id).one_or_none()
-        if question:
-            try:
-              question.delete()
+        if not question:
+              abort(404)
+        try:
+            question.delete()
+            return jsonify({
+                'sucecss':True,
+                'deleted' :id})
             
-              return jsonify({
-                  'sucecss':True,
-                  'deleted' :id
-              })
-            
-            except:
-              abort(402)
-        abort(404)
-                    
-# ADD New Question
+        except Exception as e:
+          print(e)
+          abort(402)
+
     @app.route('/questions',methods=['POST'])
     def add_question():
         try:
-          
           body = request.get_json()
           new_question = body.get('question')
           new_answer = body.get('answer')
           new_difficulty = body.get('difficulty')
           new_category = body.get('category')
-          if ((new_question is None) or (new_answer is None) or (new_difficulty is None) or (new_category is None)):
+          
+          if ((new_question is None) or (new_answer is None) 
+              or (new_difficulty is None) or (new_category is None)):
             abort(422)
-            
+    
           question = Question(question=new_question, answer=new_answer, difficulty=new_difficulty, category=new_category)
           question.insert()
           
           return jsonify({
                 'sucecss':True,
-                'created' :question.id
-            })
-        except:
+                'created' :question.id})
+          
+        except Exception as e:
+          print(e)
           abort(422)
         
-# Search for Exisiting Questions.
     @app.route('/search',methods=['POST'])
     def search_question():
-        body = request.get_json()
-        searchTerm = body.get('searchTerm')
-        questions = Question.query.filter(Question.question.ilike(f'%{searchTerm}%')).all()
-        current_quesitons = paginate_questions(request,questions)
-        total_questions = len(Question.query.all())
-        category = Category.query.order_by(Category.id).all()
-   
-        if (len(questions) == 0):
-            abort(404)
-                
-        return jsonify({
-            'sucecss':True,
-            'questions': current_quesitons,
-            'total_questions': total_questions,
-            'current_categroy': category[0].format()['type']
-          })
+        try:
+          body = request.get_json()
+          searchTerm = body.get('searchTerm')
+          questions = Question.query.filter(Question.question.ilike(f'%{searchTerm}%')).all()
+          current_quesitons = paginate_questions(request,questions)
+          total_questions = len(Question.query.all())
+          category = Category.query.order_by(Category.id).all()
+
+          if (len(questions) == 0) or not category:
+              abort(404)
                   
-#GET Questions based on Category Id
+          return jsonify({
+              'sucecss':True,
+              'questions': current_quesitons,
+              'total_questions': total_questions,
+              'current_categroy': category[0].format()['type']
+            })
+        except Exception as e:
+          print(e)
+          abort(404)
+                  
     @app.route('/categories/<int:id>/questions', methods=['GET'])
     def get_questions_by_category(id):
         try:
@@ -141,13 +131,13 @@ def create_app(test_config=None):
           selection = Question.query.filter_by(category=category.id).all()
           question_paginate = paginate_questions(request, selection)
           return jsonify({
-            'success':True,
-            'questions':question_paginate,
-            'total_questions': len(Question.query.all()),
-            'current_categroy': category.format()['type']
-            })
-        except:
-            abort(500)  
+                    'success':True,
+                    'questions':question_paginate,
+                    'total_questions': len(Question.query.all()),
+                    'current_categroy': category.format()['type']})
+        except Exception as e:
+          print(e)
+          abort(500)  
           
     @app.route('/play', methods=['POST'])
     def play_quiz():
@@ -158,24 +148,27 @@ def create_app(test_config=None):
         
         if previous_questions is None or quiz_categroy is None:
               abort(400)
-              
-        if quiz_categroy == 0:
-          questions = Question.query.all()
+        try:
+               
+          if quiz_categroy == 0:
+            questions = Question.query.all()
 
-        else:
-          questions = Question.query.filter_by(category=str(quiz_categroy))
-        
-        for q in questions:
-          if q.id not in previous_questions:
-            current_question = q.format()
-            break
+          else:
+            questions = Question.query.filter_by(category=str(quiz_categroy))
           
-        return jsonify({
-          'sucecss':True,
-          'question': current_question
-        }) 
-        
-
+          for q in questions:
+            if q.id not in previous_questions:
+              current_question = q.format()
+              break
+            
+          return jsonify({
+            'sucecss':True,
+            'question': current_question
+          }) 
+        except Exception as e:
+          print(e)
+          abort(400)  
+      
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
