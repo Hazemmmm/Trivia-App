@@ -87,7 +87,7 @@ GET ...
 POST ...
 DELETE ...
 
-GET '/api/v1.0/categories'
+GET '/categories'
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
 - Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
@@ -98,7 +98,198 @@ GET '/api/v1.0/categories'
 '5' : "Entertainment",
 '6' : "Sports"}
 
-```
+GET '/questions'
+
+- Return All questions & and questiojns are paginated.
+- It could request question page by query string '/questions?page=1'
+
+{
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "current_category": null,
+  "questions": [
+    {
+      "answer": "Muhammad Ali",
+      "category": 4,
+      "difficulty": 1,
+      "id": 9,
+      "question": "What boxer's original name is Cassius Clay?"
+    },
+    {
+      "answer": "Apollo 13",
+      "category": 5,
+      "difficulty": 4,
+      "id": 2,
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    },
+    {
+      "answer": "Tom Cruise",
+      "category": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    },
+    {
+      "answer": "Edward Scissorhands",
+      "category": 5,
+      "difficulty": 3,
+      "id": 6,
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    },
+    {
+      "answer": "Brazil",
+      "category": 6,
+      "difficulty": 3,
+      "id": 10,
+      "question": "Which is the only team to play in every soccer World Cup tournament?"
+    },
+    {
+      "answer": "Uruguay",
+      "category": 6,
+      "difficulty": 4,
+      "id": 11,
+      "question": "Which country won the first ever soccer World Cup in 1930?"
+    },
+    {
+      "answer": "George Washington Carver",
+      "category": 4,
+      "difficulty": 2,
+      "id": 12,
+      "question": "Who invented Peanut Butter?"
+    },
+    {
+      "answer": "Lake Victoria",
+      "category": 3,
+      "difficulty": 2,
+      "id": 13,
+      "question": "What is the largest lake in Africa?"
+    },
+    {
+      "answer": "The Palace of Versailles",
+      "category": 3,
+      "difficulty": 3,
+      "id": 14,
+      "question": "In which royal palace would you find the Hall of Mirrors?"
+    },
+    {
+      "answer": "Agra",
+      "category": 3,
+      "difficulty": 2,
+      "id": 15,
+      "question": "The Taj Mahal is located in which Indian city?"
+    }
+  ],
+  "sucecss": true,
+  "total_questions": 165
+}
+
+GET 'categories/1/questions'
+- Get questions based on specific category using category id.
+{
+  "current_categroy": "Science",
+  "questions": [
+    {
+      "answer": "The Liver",
+      "category": 1,
+      "difficulty": 4,
+      "id": 20,
+      "question": "What is the heaviest organ in the human body?"
+    },
+    {
+      "answer": "Alexander Fleming",
+      "category": 1,
+      "difficulty": 3,
+      "id": 21,
+      "question": "Who discovered penicillin?"
+    },
+    {
+      "answer": "Blood",
+      "category": 1,
+      "difficulty": 4,
+      "id": 22,
+      "question": "Hematology is a branch of medicine involving the study of what?"
+    },
+    {
+      "answer": "gfdg",
+      "category": 1,
+      "difficulty": 1,
+      "id": 172,
+      "question": "gfdg"
+    },
+    {
+      "answer": ";k;k",
+      "category": 1,
+      "difficulty": 1,
+      "id": 165,
+      "question": "l;lk"
+    },
+    {
+      "answer": "",
+      "category": 1,
+      "difficulty": 1,
+      "id": 227,
+      "question": ""
+    }
+  ],
+  "success": true,
+  "total_questions": 165
+}
+
+POST '/questions'
+- Create new question.
+{
+    "created": 289,
+    "sucecss": true
+}
+
+DELETE 'questions/'
+- Delete a question by id in url query string.
+curl http://127.0.0.1:5000/questions/4 -X DELETE
+{"deleted":4,"sucecss":true}
+
+POST '/search'
+- return questions based on search query string in search bar. [ex: searchTerm:"how"]
+{
+    "current_categroy": "Science",
+    "questions": [
+        {
+            "answer": "One",
+            "category": 2,
+            "difficulty": 4,
+            "id": 18,
+            "question": "How many paintings did Van Gogh sell in his lifetime?"
+        },
+        {
+            "answer": "16",
+            "category": 4,
+            "difficulty": 2,
+            "id": 288,
+            "question": "How many points is a touchdown worth?"
+        },
+        {
+            "answer": "16",
+            "category": 4,
+            "difficulty": 2,
+            "id": 289,
+            "question": "How many points is a touchdown worth?"
+        }
+    ],
+    "sucecss": true,
+    "total_questions": 166
+}
+
+POST '/play'
+- return random question not in previous questions.
+{
+'sucecss':True,
+'question': current_question
+}
 
 
 ## Testing

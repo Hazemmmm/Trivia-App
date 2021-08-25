@@ -155,7 +155,6 @@ def create_app(test_config=None):
 
           else:
             questions = Question.query.filter_by(category=str(quiz_categroy))
-          
           for q in questions:
             if q.id not in previous_questions:
               current_question = q.format()
