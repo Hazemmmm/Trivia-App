@@ -144,25 +144,27 @@ def create_app(test_config=None):
         questions = None  
         body = request.get_json()
         previous_questions = body.get('previous_questions')
-        quiz_categroy = body.get('quiz_category')['id']
-        
-        if previous_questions is None or quiz_categroy is None:
+        category = body.get('quiz_category')
+    
+        if ((previous_questions is None) or (category is None)):
               abort(400)
         try:
                
-          if quiz_categroy == 0:
+          if (category['id'] == 0):
             questions = Question.query.all()
 
           else:
-            questions = Question.query.filter_by(category=str(quiz_categroy))
-          for q in questions:
-            if q.id not in previous_questions:
-              current_question = q.format()
-              break
+            questions = Question.query.filter_by(category=category['id']).all()
+            question = questions[random.randrange(0,len(questions),1)]
+        
+          # for q in questions:
+          #   if q.id not in previous_questions:
+          #     current_question = q.format()
+          #     break
             
           return jsonify({
             'sucecss':True,
-            'question': current_question
+            'question': question.format()
           }) 
         except Exception as e:
           print(e)

@@ -125,14 +125,12 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['question'])
      
     def test_play_quiz_fails(self):
-        res = self.client().post('/play', json={
-                                                'previous_questions':[20],
-                                                'quiz_category':{"type":"geology"}
-                                                })   
+        res = self.client().post('/play', json={})   
         data = json.loads(res.data)
-        self.assertEqual(res.status_code,500)
-        self.assertEqual(data['success'],False)
-        self.assertEqual(data['message'],"Internal server error")
+        
+        self.assertEqual(res.status_code,400)
+        self.assertEqual(data['sucecss'],False)
+        self.assertEqual(data['message'],"bad request")
     
     def test_delete_question(self):
         new_questions = Question(question="tests?", answer="yes", category="2", difficulty=2 )
